@@ -56,7 +56,7 @@
         return self.cacheKeyFilter(url);
     }
     else {
-        return [url absoluteString];
+        return [url absoluteString]; //将NSRUL转换为NSString
     }
 }
 
@@ -125,14 +125,15 @@
         url = nil;
     }
 
-    __block SDWebImageCombinedOperation *operation = [SDWebImageCombinedOperation new];
-    __weak SDWebImageCombinedOperation *weakOperation = operation;
+    __block SDWebImageCombinedOperation *operation = [SDWebImageCombinedOperation new]; //?联合操作？
+    __weak SDWebImageCombinedOperation *weakOperation = operation; // ....
 
     BOOL isFailedUrl = NO;
     @synchronized (self.failedURLs) {
         isFailedUrl = [self.failedURLs containsObject:url];
     }
 
+    //当url长度为0 或者 重新下载失败 用completedBlock 返回错误结果
     if (url.absoluteString.length == 0 || (!(options & SDWebImageRetryFailed) && isFailedUrl)) {
         dispatch_main_sync_safe(^{
             NSError *error = [NSError errorWithDomain:NSURLErrorDomain code:NSURLErrorFileDoesNotExist userInfo:nil];
@@ -141,12 +142,15 @@
         return operation;
     }
 
+    //URL正常的话 就将这次操作operation 加入到正在运行 runningOperations
+    
     @synchronized (self.runningOperations) {
         [self.runningOperations addObject:operation];
     }
     NSString *key = [self cacheKeyForURL:url];
 
     operation.cacheOperation = [self.imageCache queryDiskCacheForKey:key done:^(UIImage *image, SDImageCacheType cacheType) {
+        //如果操作是取消的 从队列中移除操作
         if (operation.isCancelled) {
             @synchronized (self.runningOperations) {
                 [self.runningOperations removeObject:operation];
@@ -154,8 +158,14 @@
 
             return;
         }
-
+        
+        //如果 (没有图片或者 设置了刷新缓存的Flag ) &&(代理没有实现shouldDownloadImageForURL 方法 或者该URL是需要重新下载的URL)
+        /**
+         *   反正就是要下载图片的！
+         */
         if ((!image || options & SDWebImageRefreshCached) && (![self.delegate respondsToSelector:@selector(imageManager:shouldDownloadImageForURL:)] || [self.delegate imageManager:self shouldDownloadImageForURL:url])) {
+            
+            //有缓存图片而且要求刷新缓存  这里先返回缓存的图片 后面接着执行 再返回刷新后的图片
             if (image && options & SDWebImageRefreshCached) {
                 dispatch_main_sync_safe(^{
                     // If image was found in the cache but SDWebImageRefreshCached is provided, notify about the cached image
@@ -173,6 +183,8 @@
             if (options & SDWebImageHandleCookies) downloaderOptions |= SDWebImageDownloaderHandleCookies;
             if (options & SDWebImageAllowInvalidSSLCertificates) downloaderOptions |= SDWebImageDownloaderAllowInvalidSSLCertificates;
             if (options & SDWebImageHighPriority) downloaderOptions |= SDWebImageDownloaderHighPriority;
+            
+            
             if (image && options & SDWebImageRefreshCached) {
                 // force progressive off if image already cached but forced refreshing
                 downloaderOptions &= ~SDWebImageDownloaderProgressiveDownload;

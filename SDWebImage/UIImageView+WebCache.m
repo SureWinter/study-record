@@ -44,20 +44,23 @@ static char TAG_ACTIVITY_SHOW;
 - (void)sd_setImageWithURL:(NSURL *)url placeholderImage:(UIImage *)placeholder options:(SDWebImageOptions)options progress:(SDWebImageDownloaderProgressBlock)progressBlock completed:(SDWebImageCompletionBlock)completedBlock {
     [self sd_cancelCurrentImageLoad];
     
+    //利用运行时添加imageURLKey 属性
     objc_setAssociatedObject(self, &imageURLKey, url, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
-
+    //如果没有设置延迟占位图片的话 就直接显示占位图片
     if (!(options & SDWebImageDelayPlaceholder)) {
         dispatch_main_async_safe(^{
             self.image = placeholder;
         });
     }
     
-    if (url) {
+    if (url) { //url 不为空 进行下一步操作  否则直接报错
 
         // check if activityView is enabled or not
         if ([self showActivityIndicatorView]) {
             [self addActivityIndicator];
         }
+        
+        //创建下载operation
 
         __weak __typeof(self)wself = self;
         id <SDWebImageOperation> operation = [SDWebImageManager.sharedManager downloadImageWithURL:url options:options progress:progressBlock completed:^(UIImage *image, NSError *error, SDImageCacheType cacheType, BOOL finished, NSURL *imageURL) {
@@ -84,6 +87,8 @@ static char TAG_ACTIVITY_SHOW;
                 }
             });
         }];
+        
+        //将创建的下载operation加入下载队列
         [self sd_setImageLoadOperation:operation forKey:@"UIImageViewImageLoad"];
     } else {
         dispatch_main_async_safe(^{
