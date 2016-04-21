@@ -111,6 +111,7 @@ static NSString *const kCompletedCallbackKey = @"completed";
 - (void)setOperationClass:(Class)operationClass {
     _operationClass = operationClass ?: [SDWebImageDownloaderOperation class];
 }
+ //下载图片
 
 - (id <SDWebImageOperation>)downloadImageWithURL:(NSURL *)url options:(SDWebImageDownloaderOptions)options progress:(SDWebImageDownloaderProgressBlock)progressBlock completed:(SDWebImageDownloaderCompletedBlock)completedBlock {
     __block SDWebImageDownloaderOperation *operation;

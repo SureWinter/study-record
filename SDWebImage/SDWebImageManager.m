@@ -175,6 +175,8 @@
             }
 
             // download if no image or requested to refresh anyway, and download allowed by delegate
+            
+            //统计下载选项
             SDWebImageDownloaderOptions downloaderOptions = 0;
             if (options & SDWebImageLowPriority) downloaderOptions |= SDWebImageDownloaderLowPriority;
             if (options & SDWebImageProgressiveDownload) downloaderOptions |= SDWebImageDownloaderProgressiveDownload;
@@ -185,25 +187,38 @@
             if (options & SDWebImageHighPriority) downloaderOptions |= SDWebImageDownloaderHighPriority;
             
             
+            //  有缓存图片 而且 要求刷新缓存 因为之前已经返回缓存的图片了 这里就去掉 SDWebImageDownloaderProgressiveDownload
+            //  而且去掉从缓存读取的选项   忽略缓存  直接下载
             if (image && options & SDWebImageRefreshCached) {
                 // force progressive off if image already cached but forced refreshing
                 downloaderOptions &= ~SDWebImageDownloaderProgressiveDownload;
                 // ignore image read from NSURLCache if image if cached but force refreshing
                 downloaderOptions |= SDWebImageDownloaderIgnoreCachedResponse;
             }
+            
+            //****  使用SDWebImageDownloader进行图片下载
+            
             id <SDWebImageOperation> subOperation = [self.imageDownloader downloadImageWithURL:url options:downloaderOptions progress:progressBlock completed:^(UIImage *downloadedImage, NSData *data, NSError *error, BOOL finished) {
+                
+                //**下载回调 步骤：
+                
+                //1 .如果操作是取消的
                 if (weakOperation.isCancelled) {
                     // Do nothing if the operation was cancelled
                     // See #699 for more details
                     // if we would call the completedBlock, there could be a race condition between this block and another completedBlock for the same object, so if this one is called second, we will overwrite the new data
                 }
+                //2 .如果下载错误
                 else if (error) {
+                    //2.1 如果下载没有取消  返回错误信息
                     dispatch_main_sync_safe(^{
                         if (!weakOperation.isCancelled) {
                             completedBlock(nil, error, SDImageCacheTypeNone, finished, url);
                         }
                     });
-
+                    
+                    //2.2 记录下载失败的url 加入黑名单
+                    
                     if (   error.code != NSURLErrorNotConnectedToInternet
                         && error.code != NSURLErrorCancelled
                         && error.code != NSURLErrorTimedOut
@@ -216,7 +231,9 @@
                         }
                     }
                 }
+                //3  开始缓存
                 else {
+                    //如果要求重新下载失败URL 将URL从黑名单移除
                     if ((options & SDWebImageRetryFailed)) {
                         @synchronized (self.failedURLs) {
                             [self.failedURLs removeObject:url];
@@ -228,6 +245,8 @@
                     if (options & SDWebImageRefreshCached && image && !downloadedImage) {
                         // Image refresh hit the NSURLCache cache, do not call the completion block
                     }
+                    
+                    // 如果要求transformedImage 在这里进行处理
                     else if (downloadedImage && (!downloadedImage.images || (options & SDWebImageTransformAnimatedImage)) && [self.delegate respondsToSelector:@selector(imageManager:transformDownloadedImage:withURL:)]) {
                         dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0), ^{
                             UIImage *transformedImage = [self.delegate imageManager:self transformDownloadedImage:downloadedImage withURL:url];
@@ -245,10 +264,10 @@
                         });
                     }
                     else {
+                     // 缓存图片  回调图片
                         if (downloadedImage && finished) {
                             [self.imageCache storeImage:downloadedImage recalculateFromImage:NO imageData:data forKey:key toDisk:cacheOnDisk];
                         }
-
                         dispatch_main_sync_safe(^{
                             if (!weakOperation.isCancelled) {
                                 completedBlock(downloadedImage, nil, SDImageCacheTypeNone, finished, url);
@@ -256,6 +275,8 @@
                         });
                     }
                 }
+                
+                //完成下载缓存 就将这次操作operation 从正在运行runningOperations 中移除
 
                 if (finished) {
                     @synchronized (self.runningOperations) {
@@ -263,14 +284,19 @@
                     }
                 }
             }];
+            
+            //下载操作的取消Block
             operation.cancelBlock = ^{
                 [subOperation cancel];
-                
                 @synchronized (self.runningOperations) {
                     [self.runningOperations removeObject:weakOperation];
                 }
             };
         }
+        
+        //*
+        //* 查询到有缓存图片存在
+        //*
         else if (image) {
             dispatch_main_sync_safe(^{
                 if (!weakOperation.isCancelled) {
