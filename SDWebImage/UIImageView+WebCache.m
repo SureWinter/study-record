@@ -88,7 +88,10 @@ static char TAG_ACTIVITY_SHOW;
             });
         }];
         
-        //将创建的下载operation加入下载队列
+        
+        /**
+         *  将创建的下载operation加入下载队列.
+         */
         [self sd_setImageLoadOperation:operation forKey:@"UIImageViewImageLoad"];
     } else {
         dispatch_main_async_safe(^{

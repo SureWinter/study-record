@@ -19,6 +19,7 @@ extern NSString *const SDWebImageDownloadFinishNotification;
 
 /**
  * The request used by the operation's connection.
+ 操作使用的请求
  */
 @property (strong, nonatomic, readonly) NSURLRequest *request;
 
@@ -47,7 +48,7 @@ extern NSString *const SDWebImageDownloadFinishNotification;
 /**
  * The expected size of data.
  */
-@property (assign, nonatomic) NSInteger expectedSize;
+@property (assign, nonatomic) NSInteger expectedSize; // 应该是下载的总大小
 
 /**
  * The response returned by the operation's connection.
@@ -68,6 +69,7 @@ extern NSString *const SDWebImageDownloadFinishNotification;
  *  @param cancelBlock    the block executed if the download (operation) is cancelled
  *
  *  @return the initialized instance
+     初始化SDWebImageDownloaderOperation的实例。
  */
 - (id)initWithRequest:(NSURLRequest *)request
               options:(SDWebImageDownloaderOptions)options

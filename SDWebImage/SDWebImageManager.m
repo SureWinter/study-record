@@ -99,6 +99,7 @@
                    completion:(SDWebImageCheckCacheCompletionBlock)completionBlock {
     NSString *key = [self cacheKeyForURL:url];
     
+    
     [self.imageCache diskImageExistsWithKey:key completion:^(BOOL isInDiskCache) {
         // the completion block of checkDiskCacheForImageWithKey:completion: is always called on the main queue, no need to further dispatch
         if (completionBlock) {
@@ -121,10 +122,10 @@
     }
 
     // Prevents app crashing on argument type error like sending NSNull instead of NSURL
+    //防止出现NSNull的错误导致app崩溃
     if (![url isKindOfClass:NSURL.class]) {
         url = nil;
     }
-
     __block SDWebImageCombinedOperation *operation = [SDWebImageCombinedOperation new]; //?联合操作？
     __weak SDWebImageCombinedOperation *weakOperation = operation; // ....
 
