@@ -60,17 +60,20 @@ typedef void(^SDWebImageCalculateSizeBlock)(NSUInteger fileCount, NSUInteger tot
 
 /**
  * The maximum number of objects the cache should hold.
- 最大内存使用数量 
+ 最大内存使用数量
  */
 @property (assign, nonatomic) NSUInteger maxMemoryCountLimit;
 
 /**
  * The maximum length of time to keep an image in the cache, in seconds
+ 缓存图片的长时间  单位是秒
  */
 @property (assign, nonatomic) NSInteger maxCacheAge;
 
 /**
  * The maximum size of the cache, in bytes.
+内存使用的最大容量 单位是大B字节
+ 
  */
 @property (assign, nonatomic) NSUInteger maxCacheSize;
 
@@ -78,6 +81,8 @@ typedef void(^SDWebImageCalculateSizeBlock)(NSUInteger fileCount, NSUInteger tot
  * Returns global shared cache instance
  *
  * @return SDImageCache global instance
+
+ 单例入口
  */
 + (SDImageCache *)sharedImageCache;
 
@@ -85,6 +90,7 @@ typedef void(^SDWebImageCalculateSizeBlock)(NSUInteger fileCount, NSUInteger tot
  * Init a new cache store with a specific namespace
  *
  * @param ns The namespace to use for this cache store
+ 初始化一个新的存储空间
  */
 - (id)initWithNamespace:(NSString *)ns;
 
@@ -131,7 +137,8 @@ typedef void(^SDWebImageCalculateSizeBlock)(NSUInteger fileCount, NSUInteger tot
  * @param imageData   The image data as returned by the server, this representation will be used for disk storage
  *                    instead of converting the given image object into a storable/compressed image format in order
  *                    to save quality and CPU
- * @param key         The unique image cache key, usually it's image absolute URL
+                        imageData 被用来缓存数据 代替将图片对象换换为压缩格式 来提高质量和节约CPU资源
+ * @param key         The unique image cache key, usually it's image absolute URL 唯一的缓存key 通常使用绝对url
  * @param toDisk      Store the image to disk cache if YES
  */
 - (void)storeImage:(UIImage *)image recalculateFromImage:(BOOL)recalculate imageData:(NSData *)imageData forKey:(NSString *)key toDisk:(BOOL)toDisk;
