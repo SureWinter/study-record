@@ -13,6 +13,8 @@
 @implementation UIImage (ForceDecode)
 
 + (UIImage *)decodedImageWithImage:(UIImage *)image {
+    // 使用自动释放池 来防止遇到下载大量图片 解压导致的内存占用问题
+
     // while downloading huge amount of images
     // autorelease the bitmap context
     // and all vars to help system to free memory

@@ -35,9 +35,12 @@
 @end
 
 static const NSInteger kDefaultCacheMaxCacheAge = 60 * 60 * 24 * 7; // 1 week
-// PNG signature bytes and data (below)
+// PNG signature bytes and data (below)  PNG 格式的文件头  用来判断图片的格式
+
 static unsigned char kPNGSignatureBytes[8] = {0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A};
 static NSData *kPNGSignatureData = nil;
+
+// 用来判断格式是否是PNG格式
 
 BOOL ImageDataHasPNGPreffix(NSData *data);
 
@@ -48,10 +51,13 @@ BOOL ImageDataHasPNGPreffix(NSData *data) {
             return YES;
         }
     }
-
     return NO;
 }
-
+/**
+ *内联函数 - inline 是可以将代码替换到执行的地方 可以减少从一个函数地址 Call 执行到另外一个函数地址的时间差
+            一般用来提高程序执行效率，
+ *静态 static  函数只对当前m文件可见
+ */
 FOUNDATION_STATIC_INLINE NSUInteger SDCacheCostForImage(UIImage *image) {
     return image.size.height * image.size.width * image.scale * image.scale;
 }
