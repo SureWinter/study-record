@@ -21,6 +21,7 @@
  * if you use sd_setImage: directly.
  */
 - (NSURL *)sd_imageURL;
+UIGraphicsEndImageContext
 
 /**
  * Set the imageView `image` with an `url`.
